@@ -1,0 +1,47 @@
+map: maps/challenge_11x5.txt
+cell_size: 0.5            # meters; may drop to 0.4 if the real floor area is too small
+robot:                    # TurtleBot3 Burger
+  max_lin_vel: 0.22       # hardware limit, never exceed
+  max_ang_vel: 2.84
+  cruise_lin_vel: 0.15    # value actually used
+  cruise_ang_vel: 1.0
+ros2: {distro: humble, namespaces: [tb3_0, tb3_1]}
+battery: {max: 40, move_cost: 2, wait_cost: 1, charge_rate: 5, min_final: 10, reserve: 0}
+planner: {t_max: 200, priority: fixed, max_restarts: 10}
+baseline: {threshold: 0.3}
+experiments:
+  n_scenarios: 50
+  seed: 42
+  priorities: [fixed, battery_urgency, random_restart]   # priority strategies to compare
+  baseline_thresholds: [0.3, 0.5, 0.7, 1.0]   # each is its own baseline; 1.0 = top up before every task
+  reserves: [0, 5]                       # battery.reserve values to compare
+  delay_runs: 20                         # delayed executions per successful plan
+  scaling:                               # simulation only: more robots on the second map
+    map: maps/loop_13x6.txt
+    n_robots: [2, 3, 5]
+    priority: random_restart
+sim_delay: {enabled: false, prob: 0.2, max_extra_steps: 2}
+scenario_gen: {n_robots: 2, battery_min: 10, tasks_min: 1, tasks_max: 3}   # random scenarios; battery up to battery.max
+viz: {frame_ms: 500}      # animation time per plan step
+coppelia:
+  host: localhost
+  port: 23000             # ZMQ remote API default
+  wall_height: 0.15       # meters
+  floor_thickness: 0.1
+  model:                  # differential-drive stand-in sized like the Burger (meters, kg, N*m)
+    wheel_radius: 0.033
+    wheel_width: 0.018
+    wheel_separation: 0.160
+    body_size: [0.138, 0.120, 0.150]   # x (forward), y, z
+    body_clearance: 0.020
+    body_mass: 0.8
+    wheel_mass: 0.05
+    caster_radius: 0.009
+    caster_offset: 0.055  # front and rear casters, distance from the wheel axis
+    caster_mass: 0.02
+    motor_torque: 1.0
+  control:                # turn-then-drive cell controller
+    kp_ang: 3.0
+    kp_lin: 2.0
+    pos_tol: 0.01         # meters from the cell center
+    ang_tol: 0.02         # radians

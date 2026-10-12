@@ -1,0 +1,6 @@
+# Reference scenario S0 (SPEC section 3), on maps/challenge_11x5.txt.
+# R1 starts low: it cannot finish its task without charging (that needs 24),
+# but it can still reach the charger (that needs 16). R2 starts full.
+robots:
+  - {name: R1, start: [3, 2], battery: 20, tasks: [[0, 6]]}
+  - {name: R2, start: [3, 8], battery: 40, tasks: [[0, 1]]}

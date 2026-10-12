@@ -1,0 +1,8 @@
+# Extra scenario (not in SPEC), on maps/challenge_11x5.txt. Both methods succeed
+# here, so their costs can be compared.
+# R1 starts low next to the charger: the rule makes it charge to full (7 steps)
+# where the planner charges just enough (4 steps). R2 needs cell (1,6), which R1
+# passes on its way back, so R1's extra charging time also holds R2 up.
+robots:
+  - {name: R1, start: [3, 8], battery: 10, tasks: [[0, 6]]}
+  - {name: R2, start: [0, 1], battery: 40, tasks: [[1, 6]]}
