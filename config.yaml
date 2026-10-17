@@ -1,0 +1,83 @@
+map: maps/arena_6x5.txt   # the real arena; the main map of the project
+cell_size: 0.45           # meters: side of one cell of the real arena (measured 2026-10-14)
+robot:                    # TurtleBot3 Burger
+  max_lin_vel: 0.22       # hardware limit, never exceed
+  max_ang_vel: 2.84
+  cruise_lin_vel: 0.15    # value actually used
+  cruise_ang_vel: 1.0
+ros2:
+  distro: humble
+  namespaces: [tb3_0, tb3_1]   # one per robot, in scenario order
+  map_frame: map
+  base_frame: base_footprint   # looked up as <namespace>/base_footprint
+  grid_origin: {x: 0.0, y: 0.0, yaw: 0.0}   # the grid's bottom-left corner in the map frame; zero for the layout map
+  layout_map:                  # nav2 map drawn from the map file (robots/layout_map.py), used instead of SLAM
+    out: maps/ros/arena_6x5    # .pgm and .yaml are written here
+    resolution: 0.01           # meters per pixel
+    wall_thickness: 0.01       # meters, measured on the real arena
+    margin: 0.2                # meters of unknown space around the grid
+  control_hz: 20
+  pose_wait: 30.0              # seconds to wait for every robot's pose before giving up (discovery over Wi-Fi can be slow)
+  pose_timeout: 1.0            # seconds without a new pose before a robot is held still
+  safety_distance: 0.30        # meters between robot centers; closer stops every robot and ends the run
+  watchdog:                    # robots/cmd_watchdog.py, running on each robot
+    topic: cmd_vel_remote      # the laptop commands /<namespace>/<topic>; the watchdog forwards to cmd_vel
+    timeout: 0.5               # seconds without a command before the robot stops by itself
+  initial_pose:                # how the robots are placed on their start cells before a run
+    heading: 0.0               # radians from the direction of increasing column (on the arena: facing the charger end)
+    xy_std: 0.05               # meters; placement uncertainty handed to AMCL
+    yaw_std: 0.15              # radians
+    settle: 2.0                # seconds to let AMCL converge before the pose is read
+  fake_hz: 50                  # update rate of the simulated robots (robots/fake_turtlebot.py)
+  control: {kp_ang: 2.0, kp_lin: 1.0, pos_tol: 0.03, ang_tol: 0.05}   # looser than in simulation: AMCL poses are noisy
+battery: {max: 40, move_cost: 2, wait_cost: 1, charge_rate: 5, min_final: 10, reserve: 0}
+planner: {t_max: 200, priority: fixed, max_restarts: 10}
+baseline: {threshold: 0.3}
+experiments:
+  n_scenarios: 50
+  seed: 42
+  priorities: [fixed, battery_urgency, random_restart]   # priority strategies to compare
+  baseline_thresholds: [0.3, 0.5, 0.7, 1.0]   # each is its own baseline; 1.0 = top up before every task
+  reserves: [0, 5]                       # battery.reserve values to compare
+  delay_runs: 20                         # delayed executions per successful plan
+  scaling:                               # simulation only: more robots on the second map
+    map: maps/loop_13x6.txt
+    n_robots: [2, 3, 5]
+    priority: random_restart
+sim_delay: {enabled: false, prob: 0.2, max_extra_steps: 2}
+execution:                # running a plan on CoppeliaSim and the real robots
+  step_seconds: 4.0       # duration of one plan step; converts real time into battery cost
+  reserve: 5              # battery.reserve used when planning for these backends
+scenario_gen: {n_robots: 2, battery_min: 10, tasks_min: 1, tasks_max: 3}   # random scenarios; battery up to battery.max
+lifelong:                 # demo: robots take a new goal as soon as they reach one (execution/lifelong.py)
+  # Simulated battery of the demo, counted in cells: a full battery drives 20 cells, standing
+  # still is free, and each step on the charger adds 8. Small, so charging comes up often.
+  # It must be at least twice the longest way from a charger to a goal (14 on the arena).
+  battery: {max: 20, move_cost: 1, wait_cost: 0, charge_rate: 8, min_final: 0, reserve: 0}
+  fill_up: true           # a robot that stops to charge stays until full (else only what its job needs)
+  view_hz: 5              # live view refresh rate
+  sim_tick_seconds: 0.5   # pace of the grid_sim preview with --view
+viz: {frame_ms: 500}      # animation time per plan step
+coppelia:
+  host: localhost
+  port: 23000             # ZMQ remote API default
+  wall_height: 0.15       # meters
+  edge_wall_thickness: 0.02   # thin walls standing between two cells
+  floor_thickness: 0.1
+  model:                  # differential-drive stand-in sized like the Burger (meters, kg, N*m)
+    wheel_radius: 0.033
+    wheel_width: 0.018
+    wheel_separation: 0.160
+    body_size: [0.138, 0.120, 0.150]   # x (forward), y, z
+    body_clearance: 0.020
+    body_mass: 0.8
+    wheel_mass: 0.05
+    caster_radius: 0.009
+    caster_offset: 0.055  # front and rear casters, distance from the wheel axis
+    caster_mass: 0.02
+    motor_torque: 1.0
+  control:                # turn-then-drive cell controller
+    kp_ang: 3.0
+    kp_lin: 2.0
+    pos_tol: 0.01         # meters from the cell center
+    ang_tol: 0.02         # radians

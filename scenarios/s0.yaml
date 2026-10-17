@@ -1,0 +1,8 @@
+# Reference scenario S0 on the real arena, maps/arena_6x5.txt.
+# R1 starts low at the left end of the corridor. Its task in the bottom room costs 22
+# from there, so it has to charge at the far right first (10 to get there). R2 starts
+# full next to the charger and has to step into the alcove (1,4) to let R1 through.
+map: maps/arena_6x5.txt
+robots:
+  - {name: R1, start: [2, 0], battery: 18, tasks: [[4, 4]]}
+  - {name: R2, start: [2, 4], battery: 40, tasks: [[0, 0]]}

@@ -1,0 +1,10 @@
+# Lifelong demo on the arena: each robot shuttles between room A and room B forever
+# (python -m execution.lifelong, or robots.turtlebot_ros2 --lifelong).
+# `tasks` is the goal cycle: one job per cell, then back to the first.
+# The two robots use different cells, because a robot waits on its goal until it is
+# given the next one. Starts are those of S0. Batteries use the demo's battery
+# (lifelong.battery: counted in cells, 20 when full); R1 starts low, so it charges first.
+map: maps/arena_6x5.txt
+robots:
+  - {name: R1, start: [2, 0], battery: 6, tasks: [[4, 4], [0, 0]]}
+  - {name: R2, start: [2, 4], battery: 20, tasks: [[0, 1], [4, 3]]}
