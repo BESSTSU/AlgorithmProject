@@ -192,11 +192,13 @@ class TurtleBotWorld:
         """Block until every robot has a pose. Raises RuntimeError after `pose_wait` seconds."""
         deadline = time.monotonic() + self.ros_cfg["pose_wait"]
         missing = list(self.robots)
+        print(f"waiting up to {self.ros_cfg['pose_wait']:.0f} s for the robots' poses ...", flush=True)
         while missing and time.monotonic() < deadline:
             time.sleep(self.period)
             missing = [name for name, robot in self.robots.items() if robot.pose() is None]
         if missing:
-            raise RuntimeError(f"no pose in frame '{self.ros_cfg['map_frame']}' for {missing}")
+            raise RuntimeError(f"no pose in frame '{self.ros_cfg['map_frame']}' for {missing}; "
+                               "is localization running, and was --localize run after robot_up?")
 
     def step(self) -> None:
         """Run every robot's controller once, then wait out the rest of the control period.
